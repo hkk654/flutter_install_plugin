@@ -16,9 +16,10 @@ dependencies:
 # The following section is specific to Flutter.
 flutter:
   plugin:
-    androidPackage: com.zaihui.installplugin
-    pluginClass: InstallPlugin
-
+    platforms:
+      android:
+        package: com.zaihui.installplugin
+        pluginClass: InstallPlugin
 dev_dependencies:
   flutter_test:
     sdk: flutter
