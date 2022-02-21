@@ -5,7 +5,7 @@
         <provider
             android:name="com.zaihui.installplugin.FileProvider"
             android:authorities="${applicationId}.fileProvider"
-            android:exported="true"
+            android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
