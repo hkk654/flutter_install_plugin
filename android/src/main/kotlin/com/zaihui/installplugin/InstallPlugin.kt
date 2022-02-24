@@ -12,40 +12,65 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
+import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import androidx.annotation.NonNull
+
+
 import java.io.File
 import java.io.FileNotFoundException
 
-/**
- * 1 获取Registrar 这个接口可以获取 context
- * 2 添加自身所需依赖
- * @property registrar Registrar
- * @constructor
- */
-class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
-    companion object {
-        private const val installRequestCode = 1234
-        private var apkFile: File? = null
-        private var appId: String? = null
+/** InstallPlugin */
+class InstallPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
+    /// The MethodChannel that will the communication between Flutter and native Android
+    ///
+    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    /// when the Flutter Engine is detached from the Activity
+    private lateinit var channel: MethodChannel
+    private var binding: ActivityPluginBinding? = null
+    private val installRequestCode = 1234
+    private var apkFile: File? = null
+    private var appId: String? = null
 
-        @JvmStatic
-        fun registerWith(registrar: Registrar): Unit { 
-            val channel = MethodChannel(registrar.messenger(), "install_plugin")
-            val installPlugin = InstallPlugin(registrar)
-            channel.setMethodCallHandler(installPlugin)
-            registrar.addActivityResultListener { requestCode, resultCode, intent ->
-                Log.d(
+
+    override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        channel = MethodChannel(flutterPluginBinding.getBinaryMessenger(), "install_plugin")
+        channel.setMethodCallHandler(this)
+    }
+
+    override fun onDetachedFromEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        channel.setMethodCallHandler(null)
+    }
+
+    // --- ActivityAware
+    override fun onAttachedToActivity(@NonNull binding: ActivityPluginBinding) {
+        this.binding = binding
+        binding.addActivityResultListener { requestCode, resultCode, intent ->
+            Log.d(
                     "ActivityResultListener",
                     "requestCode=$requestCode, resultCode = $resultCode, intent = $intent"
-                )
-                if (resultCode == Activity.RESULT_OK && requestCode == installRequestCode) {
-                    installPlugin.install24(registrar.context(), apkFile, appId)
-                    true
-                } else
+            )
+            if (resultCode == Activity.RESULT_OK && requestCode == installRequestCode) {
+                install24(binding.activity, apkFile, appId)
+                true
+            } else
 
                 false
-            }
         }
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        onDetachedFromActivity()
+    }
+
+    override fun onReattachedToActivityForConfigChanges(@NonNull binding: ActivityPluginBinding) {
+        onAttachedToActivity(binding)
+    }
+
+    override fun onDetachedFromActivity() {
+//            pluginBinding.removeActivityResultListener()
+        binding = null
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -71,7 +96,7 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
     private fun installApk(filePath: String?, currentAppId: String?) {
         if (filePath == null) throw NullPointerException("fillPath is null!")
         val activity: Activity =
-            registrar.activity() ?: throw NullPointerException("context is null!")
+                binding?.activity ?: throw NullPointerException("context is null!")
 
         val file = File(filePath)
         if (!file.exists()) throw FileNotFoundException("$filePath is not exist! or check permission")
