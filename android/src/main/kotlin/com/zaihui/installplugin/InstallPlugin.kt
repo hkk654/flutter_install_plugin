@@ -7,7 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
-import androidx.core.content.FileProvider
+import com.zaihui.installplugin.FileProvider
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
