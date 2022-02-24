@@ -24,6 +24,7 @@ import java.io.FileNotFoundException
 /** InstallPlugin */
 class InstallPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     companion object {
+        private const val CHANNEL = "install_plugin"
     }
 
     /// The MethodChannel that will the communication between Flutter and native Android
@@ -38,7 +39,7 @@ class InstallPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(flutterPluginBinding.getBinaryMessenger(), "install_plugin")
+        channel = MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL)
         channel.setMethodCallHandler(this)
     }
 
